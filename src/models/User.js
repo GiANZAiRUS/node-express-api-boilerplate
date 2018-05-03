@@ -1,0 +1,51 @@
+'use strict'
+
+import bcrypt from 'bcrypt'
+
+export default (sequelize, DataTypes) => {
+  const User = sequelize.define('User', {
+    userId: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
+    },
+    firstName: DataTypes.STRING,
+    lastName: DataTypes.STRING,
+    email: {
+      type: DataTypes.STRING,
+      unique: true
+    },
+    roleId  : DataTypes.INTEGER,
+    password: DataTypes.STRING,
+    redirect: DataTypes.STRING,
+    status: DataTypes.STRING
+  })
+
+  User.prototype.authenticate = function(password) {
+    return bcrypt.compareSync(password, this.password)
+  }
+
+  User.prototype.fullName = function() {
+    return [this.firstName, this.lastName].join(' ')
+  }
+
+  User.associate = (models) => {
+    User.hasOne(models.Path, {
+      as: 'Paths',
+      foreignKey: 'userId'
+    })
+
+    User.belongsTo(models.Roles, {
+      as: 'Role',
+      foreignKey: 'roleId'
+    })
+
+
+    User.hasMany(models.Session, {
+      as: 'Sessions',
+      foreignKey: 'userId'
+    })
+  }
+
+  return User
+}
